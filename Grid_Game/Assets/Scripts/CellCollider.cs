@@ -10,12 +10,14 @@ public class CellCollider : MonoBehaviour
     {
         GameManager.Instance.SelectedCell = cell;
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && GameManager.Instance.State == GameState.PlayerTurn)
         {
             // Debug.Log("Cell Clicked");
-            GameManager.Instance.CellsToTriggerNow.Add(cell);
-            GameManager.Instance.State = GameState.PuzzleStep;
-            //cell.TriggerCell();
+            if (cell.CellData.PlayerTriggerable)
+            {
+                GameManager.Instance.DoFirstAction(cell);
+                //cell.TriggerCell();
+            }
         }
     }
 }

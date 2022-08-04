@@ -3,28 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CellActionType { AddMagnitude }
-public enum CellTriggerShape { Square, Cross, List }
-public enum CellListener { MatchMagnitude }
 public class Cell : MonoBehaviour
 {
     [SerializeField]
     private CellUI cellUI;
-
-    [SerializeField]
-    private CellActionType cellActionType; // What it does to other cells or itself
-
-    [SerializeField]
-    private CellTriggerShape cellActionShape; // Which cells it does it to
-
-    [SerializeField]
-    private CellTriggerShape cellTriggerShape;  // Which cells to do next
-
-    [SerializeField]
-    private CellListener cellActionListener; // What things must the cell be to do the action to it
-
-    [SerializeField]
-    private CellListener cellTriggerListener; // What things must the cell be to trigger it
 
     [SerializeField]
     private int currentValue;
@@ -33,13 +15,7 @@ public class Cell : MonoBehaviour
     private int previousValue;
 
     [SerializeField]
-    private int magnitude = -1;
-
-    [SerializeField]
-    private int listenerMagnitude = 0;
-
-    [SerializeField]
-    private int actionPrecedence = 0;
+    private CellData cellData;
 
     private int rowPos;
 
@@ -47,46 +23,9 @@ public class Cell : MonoBehaviour
 
     //private int triggerPrecedence = 0;
 
-    public CellActionType CellActionType
+    public CellData CellData
     {
-        get { return cellActionType; }
-        set { cellActionType = value; }
-    }
-
-    public CellTriggerShape CellActionShape
-    {
-        get { return cellActionShape; }
-        set { cellActionShape = value; }
-    }
-
-    public CellTriggerShape CellTriggerShape
-    {
-        get { return cellTriggerShape; }
-        set { cellTriggerShape = value; }
-    }
-
-    public CellListener CellActionListener
-    {
-        get { return cellActionListener; }
-        set { cellActionListener = value; }
-    }
-
-    public CellListener CellTriggerListener
-    {
-        get { return cellTriggerListener; }
-        set { cellTriggerListener = value; }
-    }
-
-    public int Magnitude
-    {
-        get { return magnitude; }
-        set { magnitude = value; }
-    }
-
-    public int ListenerMagnitude
-    {
-        get { return listenerMagnitude; }
-        set { listenerMagnitude = value; }
+        get { return cellData; }
     }
 
     public int RowPosition
@@ -103,7 +42,8 @@ public class Cell : MonoBehaviour
 
     private void Start()
     {
-        cellUI.UpdateUI(this);
+        if (cellUI)
+            cellUI.UpdateUI(this);
     }
 
     public void AddCellValue(int val)
@@ -114,8 +54,9 @@ public class Cell : MonoBehaviour
     public void SetCellValue(int newValue)
     {
         previousValue = currentValue;
-        currentValue = newValue;
-        cellUI.UpdateUI(this);
+        currentValue = Mathf.Clamp(newValue, cellData.MinValue, cellData.MaxValue);
+        if (cellUI)
+            cellUI.UpdateUI(this);
     }
 
     public int GetCellValue()
@@ -126,15 +67,15 @@ public class Cell : MonoBehaviour
     public void TriggerCell()
     {
         List<(int, int)> actionCellShapeCoords = new List<(int, int)>();
-        actionCellShapeCoords = CellShapeDB.shapes[CellActionShape].Invoke(this);
+        actionCellShapeCoords = CellShapeDB.shapes[cellData.CellActionShape].Invoke(this);
         List<Cell> potentialActionCells = GetCellsByRelativeCoords(actionCellShapeCoords);
         
-        Action<Cell, Cell> action = CellActionDB.actions[cellActionType];
+        Action<Cell, Cell> action = CellActionDB.actions[cellData.CellActionType];
 
         // Move listener checks here
         foreach (Cell cell in potentialActionCells)
         {
-            bool doAction = CellListenterDB.listeners[cell.CellActionListener].Invoke((this, cell));
+            bool doAction = CellListenterDB.listeners[cell.cellData.CellActionListener].Invoke((this, cell));
 
             if (!doAction)
                 continue;
@@ -142,7 +83,7 @@ public class Cell : MonoBehaviour
             if (GameManager.Instance.CurrentStepActions.ContainsKey(cell)) {
                 (Action<Cell, Cell>, Cell)  currentStoredAction = GameManager.Instance.CurrentStepActions[cell];
 
-                if (currentStoredAction.Item2.actionPrecedence < actionPrecedence)
+                if (currentStoredAction.Item2.cellData.ActionPrecedence < cellData.ActionPrecedence)
                 {
                     GameManager.Instance.CurrentStepActions[cell] = (action, this);
                 }
@@ -154,11 +95,15 @@ public class Cell : MonoBehaviour
         }
 
         List<(int, int)> triggerCellShapeCoords = new List<(int, int)>();
+        triggerCellShapeCoords = CellShapeDB.shapes[cellData.CellTriggerShape].Invoke(this);
         List<Cell> triggerCells = GetCellsByRelativeCoords(triggerCellShapeCoords);
-        triggerCellShapeCoords = CellShapeDB.shapes[cellTriggerShape].Invoke(this);
         foreach (Cell cell in triggerCells)
         {
-            bool doTrigger = CellListenterDB.listeners[cell.CellTriggerListener].Invoke((this, cell));
+            bool doTrigger = CellListenterDB.listeners[cell.cellData.CellTriggerListener].Invoke((this, cell));
+
+            if (!doTrigger)
+                continue;
+
             if (!GameManager.Instance.CellsToTriggerNext.Contains(cell))
                 GameManager.Instance.CellsToTriggerNext.Add(cell);
         }

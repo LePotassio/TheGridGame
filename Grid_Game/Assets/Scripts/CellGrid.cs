@@ -25,6 +25,9 @@ public class CellGrid : MonoBehaviour
                 newCell.RowPosition = row;
                 newCell.ColumnPosition = col;
 
+                // Temp
+                CellFactory.SetCell(newCell, 6, CellType.DecrementDie);
+
                 grid[row, col] = newCell;
             }
         }

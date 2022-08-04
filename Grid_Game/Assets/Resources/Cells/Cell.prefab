@@ -278,13 +278,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cellUI: {fileID: 8417354936648875081}
-  cellActionType: 0
-  cellActionShape: 0
-  cellTriggerShape: 0
-  cellActionListener: 0
-  cellTriggerListener: 0
   currentValue: 6
   previousValue: 0
-  magnitude: -1
-  listenerMagnitude: 0
-  actionPrecedence: 0
+  cellData:
+    cellActionType: 0
+    cellActionShape: 0
+    cellTriggerShape: 0
+    cellActionListener: 0
+    cellTriggerListener: 0
+    minValue: 6
+    maxValue: 0
+    magnitude: -1
+    listenerMagnitude: 0
+    actionPrecedence: 0

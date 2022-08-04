@@ -12,7 +12,7 @@ public class CellActionDB
             (Cell senderCell, Cell recieverCell) =>
             {
                 if (recieverCell)
-                    recieverCell.AddCellValue(senderCell.Magnitude);
+                    recieverCell.AddCellValue(senderCell.CellData.Magnitude);
             }
         }
     };
