@@ -13,6 +13,7 @@ public class CellListenterDB
             {
                 Cell triggerer = trigListPair.Item1;
                 Cell listener = trigListPair.Item2;
+
                 if (triggerer.GetCellValue() == listener.GetCellValue() + triggerer.CellData.ListenerMagnitude)
                     return true;
                 return false;
